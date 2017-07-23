@@ -66,6 +66,15 @@ class StockData():
         for field in fields:
             for size in window: 
                 self.data["%s_%s_%d" % (field, func ,size)] = self.data[field].rolling(window=size).apply(func=funcdict[func])
+    
+    def plotSingleSeries(self, pltfieldname): 
+        import matplotlib
+        import matplotlib.pyplot as plt
+        plt.plot(self.data[pltfieldname] )
+        plt.show()
+        return True
+
+
 
 class SeriesFilter():
     def __init__(self): 
@@ -74,14 +83,41 @@ class SeriesFilter():
     def filterfunc(self):
         raise NotImplementedError
 
+    def applyfilter(self):
+        raise NotImplementedError
 
 class WaveletFilter(SeriesFilter):
-    def __init__(self):
-        self.filter = lambda half_period: self.filterfunc(half_period) 
-    
+    def __init__(self,half_period=2):
+        self.filter = self.filterfunc(half_period)
+        self.half_period = half_period
+
     def filterfunc(self, half_period=2):
-        return [1]*half_period + [-1]*half_period
-        
+        return np.array([1]*half_period + [-1]*half_period)
+
+    def applyfilter(self, input_df):
+        return input_df.rolling(self.half_period*2).apply(lambda x: np.matmul(self.filter, x))
+
+    def changeHalfPeriod(self, half_period):
+        try:
+            tmp = self.filterfunc(half_period)
+            self.filter = tmp
+            self.half_period = half_period
+        except:
+            print('Initialize the filter matrix error: WaveletFilter')
+
+
+class FFTFilter(SeriesFilter):
+    def __init__(self, half_period=2): 
+        self.filter = self.filterfunc()
+        self.half_period = half_period
+    
+    def filterfunc(self):
+        import numpy.fft as fft
+        return fft
+
+    def applyfilter(self, input_df):
+        return input_df.rolling(self.half_period).apply(lambda x: self.filter.fft(np.array(x)))
+
     
 def getFullPath(filename, basepath = stc.STOCK_DATA_BASEPATH, relativepath= stc.STOCK_DATA_RELATIVEPATH):
     basepath = basepath
