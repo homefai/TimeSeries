@@ -66,6 +66,21 @@ class StockData():
         for field in fields:
             for size in window: 
                 self.data["%s_%s_%d" % (field, func ,size)] = self.data[field].rolling(window=size).apply(func=funcdict[func])
+
+class SeriesFilter():
+    def __init__(self): 
+        pass
+    
+    def filterfunc(self):
+        raise NotImplementedError
+
+
+class WaveletFilter(SeriesFilter):
+    def __init__(self):
+        self.filter = lambda half_period: self.filterfunc(half_period) 
+    
+    def filterfunc(self, half_period=2):
+        return [1]*half_period + [-1]*half_period
         
     
 def getFullPath(filename, basepath = stc.STOCK_DATA_BASEPATH, relativepath= stc.STOCK_DATA_RELATIVEPATH):
