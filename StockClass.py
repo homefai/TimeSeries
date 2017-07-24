@@ -116,8 +116,14 @@ class FFTFilter(SeriesFilter):
         return fft
 
     def applyfilter(self, input_df):
-        return input_df.rolling(self.half_period).apply(lambda x: self.filter.fft(np.array(x)))
-
+        fftresult = input_df.rolling(self.half_period).apply(lambda x: self.filter.fft(x))
+        length_of_data = self.half_period*2
+        result_of_fft = {}
+        for j in range(length_of_data):
+            result_of_fft["%d_%d" % (length_of_data, j) ] = []
+            for i in range(len(fftresult)): 
+                result_of_fft["%d_%d" % (length_of_data, j)].append(np.abs(i[j]))
+        return result_of_fft
     
 def getFullPath(filename, basepath = stc.STOCK_DATA_BASEPATH, relativepath= stc.STOCK_DATA_RELATIVEPATH):
     basepath = basepath
